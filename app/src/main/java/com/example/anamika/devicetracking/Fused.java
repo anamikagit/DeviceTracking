@@ -47,7 +47,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
     private LocationListener locationListener;
 
-     RestInterface apiService = RestClient.getClient().create(RestInterface.class);
+    RestInterface apiService = RestClient.getClient().create(RestInterface.class);
     private class LocationListener implements
             com.google.android.gms.location.LocationListener {
         public LocationListener() {
@@ -91,11 +91,12 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 return;
             }
             deviceNum = telephonyManager.getDeviceId();
+
             Toast.makeText(Fused.this,"loc:" +currentLat + "/ " + currentLng +
                     " /" + currentAcc + "/ " + currentSpeed +"/"+currentDateTime +"/"+deviceNum,Toast.LENGTH_LONG).show();
 
 
-            Call<List<MLocation>> call = apiService.sendLocation(currentLat+"", currentLng+"","",
+            Call<List<MLocation>> call = apiService.sendLocation(deviceNum, currentLng+"",currentLat+"",
                     currentAcc+"","");
 
             call.enqueue(new Callback<List<MLocation>>() {
