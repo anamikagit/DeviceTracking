@@ -41,7 +41,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     private static final int LOCATION_INTERVAL = 30000;
     private static final float LOCATION_DISTANCE = 0;
     private double currentLat, currentLng, currentDir,currentSpeed, deviceNum;
-    private float currentAcc;
+    private int currentAcc;
     private SharedPreferences pref;
     private String driverId;
     private String currentDateTime;
@@ -75,7 +75,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             Log.e(TAG, "onLocationChanged: " + location);
             currentLat = location.getLatitude();
             currentLng = location.getLongitude();
-            currentAcc = location.getAccuracy();
+            currentAcc = (int) location.getAccuracy();
             //currentDir = location.getBearingAccuracyDegrees();
             //currentSpeed = location.getSpeed();
             // currentDateTime = com.example.aarya.fieldofficersurveilance.model.Util.getDateTime();
