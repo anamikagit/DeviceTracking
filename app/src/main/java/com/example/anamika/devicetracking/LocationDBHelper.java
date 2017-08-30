@@ -17,7 +17,9 @@ public class LocationDBHelper extends SQLiteOpenHelper {
                     LocationEntry._ID + " INTEGER PRIMARY KEY," +
                     LocationEntry.COLUMN_NAME_LATITUDE + " TEXT," +
                     LocationEntry.COLUMN_NAME_LOGITUDE + " TEXT," +
-                    LocationEntry.COLUMN_NAME_ADDRESS + " TEXT)";
+                    LocationEntry.COLUMN_NAME_ACCURACY+ " TEXT," +
+                    LocationEntry.COLUMN_NAME_DIRECTION+ " TEXT," +
+                    LocationEntry.COLUMN_NAME_IMEI+ " TEXT)";
 
     public static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + LocationEntry.TABLE_NAME;
@@ -27,7 +29,9 @@ public class LocationDBHelper extends SQLiteOpenHelper {
         public static final String TABLE_NAME = "location";
         public static final String COLUMN_NAME_LATITUDE = "latitude";
         public static final String COLUMN_NAME_LOGITUDE = "longitude";
-        public static final String COLUMN_NAME_ADDRESS = "address";
+        public static final String COLUMN_NAME_ACCURACY = "accuracy";
+        public static final String COLUMN_NAME_DIRECTION = "direction";
+        public static final String COLUMN_NAME_IMEI = "imei";
     }
 
     public static LocationDBHelper getInstance(Context context){

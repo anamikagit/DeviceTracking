@@ -3,11 +3,14 @@ package com.example.anamika.devicetracking;
 import android.Manifest;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.BatteryManager;
@@ -24,6 +27,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -36,7 +40,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     private LocationManager mLocationManager = null;
     private static final int LOCATION_INTERVAL = 30000;
     private static final float LOCATION_DISTANCE = 0;
-    private double currentLat, currentLng, currentSpeed;
+    private double currentLat, currentLng, currentDir,currentSpeed, deviceNum;
     private float currentAcc;
     private SharedPreferences pref;
     private String driverId;
@@ -72,7 +76,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             currentLat = location.getLatitude();
             currentLng = location.getLongitude();
             currentAcc = location.getAccuracy();
-            currentSpeed = location.getSpeed();
+            //currentDir = location.getBearingAccuracyDegrees();
+            //currentSpeed = location.getSpeed();
             // currentDateTime = com.example.aarya.fieldofficersurveilance.model.Util.getDateTime();
             mContext = getApplicationContext();
             IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -80,7 +85,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             // getCompleteAddressString(double LATITUDE, double LONGITUDE);
             String deviceNum;
             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-            if (ActivityCompat.checkSelfPermission(Fused.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(Fused.this, Manifest.permission.READ_PHONE_STATE)
+                    != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
                 // here to request the missing permissions, and then overriding
@@ -89,15 +95,19 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 // to handle the case where the user grants the permission. See the documentation
                 // for ActivityCompat#requestPermissions for more details.
                 return;
+
             }
             deviceNum = telephonyManager.getDeviceId();
 
             Toast.makeText(Fused.this,"loc:" +currentLat + "/ " + currentLng +
-                    " /" + currentAcc + "/ " + currentSpeed +"/"+currentDateTime +"/"+deviceNum,Toast.LENGTH_LONG).show();
+                    " /" + currentAcc + "/ " +deviceNum,Toast.LENGTH_LONG).show();
 
 
-            Call<List<MLocation>> call = apiService.sendLocation(deviceNum, currentLng+"",currentLat+"",
-                    currentAcc+"","");
+            Call<List<MLocation>> call = apiService.sendLocation(deviceNum, currentLng+"",currentLat+"",currentAcc+"","south");
+
+
+            putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
+
 
             call.enqueue(new Callback<List<MLocation>>() {
 
@@ -111,31 +121,60 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                 }
             });
+
         }
     }
-   /* private String getCompleteAddressString(double LATITUDE, double LONGITUDE) {
-        String strAdd = "";
-        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-        try {
-            List<Address> addresses = geocoder.getFromLocation(LATITUDE, LONGITUDE, 1);
-            if (addresses != null) {
-                Address returnedAddress = addresses.get(0);
-                StringBuilder strReturnedAddress = new StringBuilder("");
 
-                for (int i = 0; i < returnedAddress.getMaxAddressLineIndex(); i++) {
-                    strReturnedAddress.append(returnedAddress.getAddressLine(i)).append("\n");
-                }
-                strAdd = strReturnedAddress.toString();
-                Log.e("My Current address", "" + strReturnedAddress.toString());
-            } else {
-                Log.e("My Current address", "No Address returned!");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("My Current address", "Can not get Address!");
+    private void putInfoToDb(double currentDir, double currentLat, double currentLng, float currentAcc, String deviceNum) {
+        SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_LATITUDE, currentLat);
+        values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_LOGITUDE, currentLng);
+        values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_ACCURACY, currentAcc);
+        values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_DIRECTION, currentDir);
+        values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_IMEI, deviceNum);
+
+        long newRowId = db.insert(LocationDBHelper.LocationEntry.TABLE_NAME, null, values);
+        db.close();
+    }
+    public List<MLocation> getAllLocation() {
+
+        SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
+
+
+        List<MLocation> mLocationsList = new ArrayList<MLocation>();
+        // Select All Query
+        String selectQuery = "SELECT  * FROM " + LocationDBHelper.LocationEntry.TABLE_NAME;
+
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                MLocation mLocation = new MLocation();
+                mLocation.setId(Integer.parseInt(cursor.getString(0)));
+                mLocation.setLat(cursor.getString(1));
+                mLocation.setLon(cursor.getString(2));
+                mLocation.setAccuracy(cursor.getString(3));
+                mLocation.setDir(cursor.getString(4));
+                mLocation.setImei(cursor.getInt(5));
+                // Adding contact to list
+                mLocationsList.add(mLocation);
+            } while (cursor.moveToNext());
         }
-        return strAdd;
-    }*/
+
+        db.close();
+        // return contact list
+        return mLocationsList;
+    }
+    public void deleteLocation(MLocation location) {
+
+        SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
+        int isDeleted = db.delete(LocationDBHelper.LocationEntry.TABLE_NAME, LocationDBHelper.LocationEntry._ID + " = ?",
+                new String[] { String.valueOf(location.getId()) });
+        db.close();
+    }
 
     @Override
     public IBinder onBind(Intent arg0) {

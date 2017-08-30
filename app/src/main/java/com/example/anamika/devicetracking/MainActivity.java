@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.facebook.stetho.Stetho;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -13,6 +15,8 @@ public class MainActivity extends AppCompatActivity {
 
         Intent i=new Intent(MainActivity.this,Fused.class);
         startService(i);
+
+        Stetho.initializeWithDefaults(MainActivity.this);
 
     }
 }
