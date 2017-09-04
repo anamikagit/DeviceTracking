@@ -1,5 +1,6 @@
 package com.example.anamika.devicetracking;
 
+public class MResponse {
 
-public class MResponce {
+	String response;
 }
