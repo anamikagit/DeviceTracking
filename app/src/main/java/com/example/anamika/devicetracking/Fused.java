@@ -46,7 +46,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     private LocationManager mLocationManager = null;
     private static final int LOCATION_INTERVAL = 30000;
     private static final float LOCATION_DISTANCE = 0;
-    private double currentLat, currentLng, currentDir,currentSpeed, deviceNum;
+    private double currentLat, currentLng,currentSpeed;
+    public String currentDir = "se", deviceNum ;
     private int currentAcc;
     private SharedPreferences pref;
     private String driverId;
@@ -112,7 +113,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         }
     }
 
-    private void putInfoToDb(double currentDir, double currentLat, double currentLng, float currentAcc, String deviceNum) {
+    private void putInfoToDb(String currentDir, double currentLat, double currentLng, float currentAcc, String deviceNum) {
         SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -232,7 +233,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             for (int i = 0; i < locations.size(); i++) {
 
                 final MLocation mLocation = locations.get(i);
-                Call<List<MLocation>> call = apiService.sendLocation("32432423", currentLng+"",currentLat+"",currentAcc+"","south");
+                Call<List<MLocation>> call = apiService.sendLocation("488787875456", currentLng+"",
+                        currentLat+"",currentAcc+"","se");
                 call.enqueue(new Callback<List<MLocation>>() {
                     @Override
                     public void onResponse(Call<List<MLocation>> call, Response<List<MLocation>> response) {
