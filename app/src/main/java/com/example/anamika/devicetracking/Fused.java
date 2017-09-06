@@ -2,6 +2,7 @@ package com.example.anamika.devicetracking;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 import android.Manifest;
@@ -58,6 +59,12 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
     private LocationListener locationListener;
 
+
+    Timer timer;
+    LocationManager lm;
+    boolean gps_enabled = false;
+    boolean network_enabled = false;
+
     RestInterface apiService = RestClient.getClient().create(RestInterface.class);
     private class LocationListener implements
             com.google.android.gms.location.LocationListener {
@@ -73,7 +80,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 float percentage = level / (float) scale;
                 mProgressStatus = (int) ((percentage) * 100);
-                Toast.makeText(Fused.this, "batt :" + mProgressStatus + "%", Toast.LENGTH_LONG).show();
+               // Toast.makeText(Fused.this, "batt :" + mProgressStatus + "%", Toast.LENGTH_LONG).show();
             }
         };
 
@@ -108,7 +115,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             Toast.makeText(Fused.this,"loc:" +currentLat + "/ " + currentLng +
                     " /" + currentAcc + "/ " +deviceNum,Toast.LENGTH_LONG).show();
 
-            putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
+           // putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
 
         }
     }
@@ -196,33 +203,47 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 .addApi(LocationServices.API).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this).build();
 
-        Observable.interval(20, 20, TimeUnit.SECONDS)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(new Observer<Long>() {
-                @Override
-                public void onSubscribe(@NonNull Disposable d) {
+        lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-                }
+        if (gps_enabled || network_enabled) {
+            Context context = getApplicationContext();
 
-                @Override
-                public void onNext(@NonNull Long aLong) {
-                    Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
-                    Log.e("zia", "This happnes every mint :)");
-                    sendAllLocationToServer();
-                }
+            Observable.interval(20, 20, TimeUnit.SECONDS)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<Long>() {
+                        @Override
+                        public void onSubscribe(@NonNull Disposable d) {
 
-                @Override
-                public void onError(@NonNull Throwable e) {
+                        }
 
-                }
+                        @Override
+                        public void onNext(@NonNull Long aLong) {
+                            //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
+                            //Log.e("anu", "This happnes every mint :)");
+                            putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
+                            sendAllLocationToServer();
+                        }
 
-                @Override
-                public void onComplete() {
+                        @Override
+                        public void onError(@NonNull Throwable e) {
 
-                }
-            });
+                        }
 
+                        @Override
+                        public void onComplete() {
+
+                        }
+                    });
+
+
+        }
+        else {
+            Toast.makeText(Fused.this,"check your gps and internet",Toast.LENGTH_LONG).show();
+            Log.e("anu", "check your gps and internet");
+        }
     }
 
     private void sendAllLocationToServer() {
