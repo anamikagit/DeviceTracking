@@ -207,7 +207,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if (gps_enabled && network_enabled) {
+        if (gps_enabled || network_enabled) {
             Context context = getApplicationContext();
 
             Observable.interval(20, 20, TimeUnit.SECONDS)
@@ -222,7 +222,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                         @Override
                         public void onNext(@NonNull Long aLong) {
                             Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
-                            Log.e("zia", "This happnes every mint :)");
+                            Log.e("anu", "This happnes every mint :)");
                             putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
                             sendAllLocationToServer();
                         }
@@ -242,7 +242,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         }
         else {
             Toast.makeText(Fused.this,"check your gps and internet",Toast.LENGTH_LONG).show();
-            Log.e("zia", "check your gps and internet");
+            Log.e("anu", "check your gps and internet");
         }
     }
 
