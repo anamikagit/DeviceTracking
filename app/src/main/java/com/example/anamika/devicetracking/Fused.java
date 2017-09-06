@@ -73,7 +73,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                 float percentage = level / (float) scale;
                 mProgressStatus = (int) ((percentage) * 100);
-                Toast.makeText(Fused.this, "batt :" + mProgressStatus + "%", Toast.LENGTH_LONG).show();
+               // Toast.makeText(Fused.this, "batt :" + mProgressStatus + "%", Toast.LENGTH_LONG).show();
             }
         };
 
@@ -207,8 +207,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                 @Override
                 public void onNext(@NonNull Long aLong) {
-                    Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
-                    Log.e("zia", "This happnes every mint :)");
+                   // Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
+                    //Log.e("zia", "This happnes every mint :)");
                     sendAllLocationToServer();
                 }
 
