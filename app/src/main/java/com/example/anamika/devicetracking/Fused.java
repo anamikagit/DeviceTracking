@@ -26,6 +26,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.anamika.devicetracking.model.Util;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -113,7 +114,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             }
             deviceNum = telephonyManager.getDeviceId();
             Toast.makeText(Fused.this,"loc:" +currentLat + "/ " + currentLng +
-                    " /" + currentAcc + "/ " +deviceNum,Toast.LENGTH_LONG).show();
+                    " /" + currentAcc + "/ " +deviceNum + Util.getCurrentDate(),Toast.LENGTH_LONG).show();
 
            // putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
 
@@ -219,6 +220,14 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                         }
 
+
+                @Override
+                public void onNext(@NonNull Long aLong) {
+                   // Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
+                    //Log.e("anu", "This happnes every mint :)");
+                    sendAllLocationToServer();
+                }
+
                         @Override
                         public void onNext(@NonNull Long aLong) {
                             //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
@@ -226,6 +235,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                             putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
                             sendAllLocationToServer();
                         }
+
 
                         @Override
                         public void onError(@NonNull Throwable e) {
@@ -247,15 +257,16 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     }
 
     private void sendAllLocationToServer() {
-//		http://111.118.178.163/amrs_igl_api/webservice.asmx/tracking?imei=32432423&lat=23.2343196868896&lon=76.2342300415039&accuracy=98.34&dir=we
-
+//		  http://111.118.178.163/amrs_igl_api/webservice.asmx/tracking?imei=32432423&lat=23.2343196868896&lon=76.2342300415039&accuracy=98.34&dir=we
+//        http://111.118.178.163/amrs_igl_api/webservice.asmx/tracking?imei=32432423&lat=23.2343196868896&lon=76.2342300415039&
+//        accuracy=98.34&dir=we&timestamp=2017-09-06%2017:08
         List<MLocation> locations = getAllLocation();
         if (locations != null && locations.size() >= 1) {
             for (int i = 0; i < locations.size(); i++) {
 
                 final MLocation mLocation = locations.get(i);
                 Call<List<MLocation>> call = apiService.sendLocation("488787875456", currentLng+"",
-                        currentLat+"",currentAcc+"","se");
+                        currentLat+"",currentAcc+"","se", Util.getDateTime());
                 call.enqueue(new Callback<List<MLocation>>() {
                     @Override
                     public void onResponse(Call<List<MLocation>> call, Response<List<MLocation>> response) {

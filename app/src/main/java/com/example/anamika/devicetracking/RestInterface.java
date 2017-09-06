@@ -14,6 +14,7 @@ public interface RestInterface {
             @Query("lat") String lat,
             @Query("lon") String lon,
             @Query("accuracy") String accuracy,
-            @Query("dir") String dir
+            @Query("dir") String dir,
+            @Query("timestamp") String timestamp
     );
 }
