@@ -16,6 +16,5 @@ public interface RestInterface {
             @Query("accuracy") String accuracy,
             @Query("dir") String dir,
             @Query("timestamp") String timestamp
-
     );
 }

@@ -19,7 +19,8 @@ public class LocationDBHelper extends SQLiteOpenHelper {
                     LocationEntry.COLUMN_NAME_LOGITUDE + " TEXT," +
                     LocationEntry.COLUMN_NAME_ACCURACY+ " TEXT," +
                     LocationEntry.COLUMN_NAME_DIRECTION+ " TEXT," +
-                    LocationEntry.COLUMN_NAME_IMEI+ " TEXT)";
+                    LocationEntry.COLUMN_NAME_IMEI+ " TEXT,"+
+                    LocationEntry.COLUMN_NAME_TIMESTAMP+ " TEXT)";
 
     public static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + LocationEntry.TABLE_NAME;
@@ -32,6 +33,7 @@ public class LocationDBHelper extends SQLiteOpenHelper {
         public static final String COLUMN_NAME_ACCURACY = "accuracy";
         public static final String COLUMN_NAME_DIRECTION = "direction";
         public static final String COLUMN_NAME_IMEI = "imei";
+        public static final String COLUMN_NAME_TIMESTAMP = "timestamp";
     }
 
     public static LocationDBHelper getInstance(Context context){
