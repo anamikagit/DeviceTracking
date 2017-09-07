@@ -26,6 +26,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.anamika.devicetracking.model.Util;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -113,7 +114,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             }
             deviceNum = telephonyManager.getDeviceId();
             Toast.makeText(Fused.this,"loc:" +currentLat + "/ " + currentLng +
-                    " /" + currentAcc + "/ " +deviceNum,Toast.LENGTH_LONG).show();
+                    " /" + currentAcc + "/ " +deviceNum + "/" + Util.getCurrentDate(),Toast.LENGTH_LONG).show();
 
            // putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
 
@@ -237,8 +238,6 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                         }
                     });
-
-
         }
         else {
             Toast.makeText(Fused.this,"check your gps and internet",Toast.LENGTH_LONG).show();
@@ -255,7 +254,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                 final MLocation mLocation = locations.get(i);
                 Call<List<MLocation>> call = apiService.sendLocation("488787875456", currentLng+"",
-                        currentLat+"",currentAcc+"","se");
+                        currentLat+"",currentAcc+"","se", Util.getDateTime());
                 call.enqueue(new Callback<List<MLocation>>() {
                     @Override
                     public void onResponse(Call<List<MLocation>> call, Response<List<MLocation>> response) {
