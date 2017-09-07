@@ -18,8 +18,6 @@ public class MLocation {
     private String accuracy;
     private String dir;
 
-    private String timestamp;
-
     public MLocation(int imei, String lat, String lon, String accuracy, String dir ,int id) {
         this.imei = imei;
         this.id = id;
@@ -27,18 +25,11 @@ public class MLocation {
         this.lon = lon;
         this.accuracy = accuracy;
         this.dir = dir;
-        this.timestamp = timestamp;
     }
 
     public MLocation() {
     }
-    public String getTimestamp() {
-        return timestamp;
-    }
 
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
     public int getImei() {
         return imei;
     }
