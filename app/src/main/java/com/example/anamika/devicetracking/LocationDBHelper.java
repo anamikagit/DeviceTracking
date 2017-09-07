@@ -20,7 +20,7 @@ public class LocationDBHelper extends SQLiteOpenHelper {
                     LocationEntry.COLUMN_NAME_ACCURACY+ " TEXT," +
                     LocationEntry.COLUMN_NAME_DIRECTION+ " TEXT," +
                     LocationEntry.COLUMN_NAME_IMEI+ " TEXT,"+
-                    LocationEntry.COLUMN_NAME_TIMESTAMP+ " TEXT)";
+                    LocationEntry.COLUMN_NAME_TIMESTAMP+ " STRING)";
 
     public static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + LocationEntry.TABLE_NAME;

@@ -53,18 +53,19 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     private int currentAcc;
     private SharedPreferences pref;
     private String driverId;
-    private String currentDateTime;
+   // private String currentDateTime;
     private GoogleApiClient mGoogleApiClient;
     // A request to connect to Location Services
     private LocationRequest mLocationRequest;
 
     private LocationListener locationListener;
 
-
-    Timer timer;
     LocationManager lm;
     boolean gps_enabled = false;
     boolean network_enabled = false;
+
+
+    String currentDateTime = Util.getDateTime();
 
     RestInterface apiService = RestClient.getClient().create(RestInterface.class);
     private class LocationListener implements
@@ -91,6 +92,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             currentLat = location.getLatitude();
             currentLng = location.getLongitude();
             currentAcc = (int) location.getAccuracy();
+            //String currentDateTime = Util.getCurrentDate();
+
             //currentDir = location.getBearingAccuracyDegrees();
             //currentSpeed = location.getSpeed();
             // currentDateTime = com.example.aarya.fieldofficersurveilance.model.Util.getDateTime();
@@ -114,7 +117,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             }
             deviceNum = telephonyManager.getDeviceId();
             Toast.makeText(Fused.this,"loc:" +currentLat + "/ " + currentLng +
-                    " /" + currentAcc + "/ " +deviceNum + "/" + Util.getCurrentDate(),Toast.LENGTH_LONG).show();
+                    " /" + currentAcc + "/ " +deviceNum + "/" + Util.getDateTime(),Toast.LENGTH_LONG).show();
 
            // putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
 
@@ -227,7 +230,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                         public void onNext(@NonNull Long aLong) {
                             //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
                             //Log.e("anu", "This happnes every mint :)");
-                            putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getCurrentDate());
+                            putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
                             sendAllLocationToServer();
                         }
 
