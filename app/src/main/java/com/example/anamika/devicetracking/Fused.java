@@ -98,7 +98,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             mContext.registerReceiver(mBroadcastReceiver, iFilter);
             // getCompleteAddressString(double LATITUDE, double LONGITUDE);
-            String deviceNum;
+           // String deviceNum;
             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             if (ActivityCompat.checkSelfPermission(Fused.this, Manifest.permission.READ_PHONE_STATE)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -121,7 +121,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         }
     }
 
-    private void putInfoToDb(String currentDir, double currentLat, double currentLng, float currentAcc, String deviceNum) {
+    private void putInfoToDb(String currentDir, double currentLat, double currentLng, float currentAcc,
+                             String deviceNum, String currentDateTime) {
         SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -130,6 +131,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_ACCURACY, currentAcc);
         values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_DIRECTION, currentDir);
         values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_IMEI, deviceNum);
+        values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_TIMESTAMP, currentDateTime);
 
         long newRowId = db.insert(LocationDBHelper.LocationEntry.TABLE_NAME, null, values);
         db.close();
@@ -153,7 +155,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 mLocation.setAccuracy(cursor.getString(3));
                 mLocation.setDir(cursor.getString(4));
                 mLocation.setImei(cursor.getInt(5));
-                // Adding contact to list
+                mLocation.setTimestamp(cursor.getString(6));
+                // Adding data to list
                 mLocationsList.add(mLocation);
             } while (cursor.moveToNext());
         }
@@ -224,7 +227,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                         public void onNext(@NonNull Long aLong) {
                             //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
                             //Log.e("anu", "This happnes every mint :)");
-                            putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
+                            putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getCurrentDate());
                             sendAllLocationToServer();
                         }
 
@@ -253,7 +256,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             for (int i = 0; i < locations.size(); i++) {
 
                 final MLocation mLocation = locations.get(i);
-                Call<List<MLocation>> call = apiService.sendLocation("488787875456", currentLng+"",
+                Call<List<MLocation>> call = apiService.sendLocation(deviceNum+"", currentLng+"",
                         currentLat+"",currentAcc+"","se", Util.getDateTime());
                 call.enqueue(new Callback<List<MLocation>>() {
                     @Override
