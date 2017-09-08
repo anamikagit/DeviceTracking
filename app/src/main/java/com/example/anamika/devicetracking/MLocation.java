@@ -27,7 +27,7 @@ public class MLocation {
         this.timestamp = timestamp;
     }
 
-    public MLocation(int imei, String lat, String lon, String accuracy, String dir , int id) {
+    public MLocation(int imei, String lat, String lon, String accuracy, String dir , int id, String timestamp) {
         this.imei = imei;
         this.id = id;
         this.lat = lat;

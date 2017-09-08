@@ -65,7 +65,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     boolean network_enabled = false;
 
 
-    String currentDateTime = Util.getDateTime();
+    public String currentDateTime = Util.getDateTime();
 
     RestInterface apiService = RestClient.getClient().create(RestInterface.class);
     private class LocationListener implements
@@ -260,7 +260,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                 final MLocation mLocation = locations.get(i);
                 Call<List<MLocation>> call = apiService.sendLocation(deviceNum+"", currentLng+"",
-                        currentLat+"",currentAcc+"","se", Util.getDateTime());
+                        currentLat+"",currentAcc+"","se", currentDateTime);
                 call.enqueue(new Callback<List<MLocation>>() {
                     @Override
                     public void onResponse(Call<List<MLocation>> call, Response<List<MLocation>> response) {
