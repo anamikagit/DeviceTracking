@@ -214,41 +214,50 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if (gps_enabled || network_enabled) {
-            Context context = getApplicationContext();
-
-            Observable.interval(20, 20, TimeUnit.SECONDS)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<Long>() {
-                        @Override
-                        public void onSubscribe(@NonNull Disposable d) {
-
-                        }
-
-                        @Override
-                        public void onNext(@NonNull Long aLong) {
-                            //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
-                            //Log.e("anu", "This happnes every mint :)");
-                            putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
-                            sendAllLocationToServer();
-                        }
-
-                        @Override
-                        public void onError(@NonNull Throwable e) {
-
-                        }
-
-                        @Override
-                        public void onComplete() {
-
-                        }
-                    });
+        if (gps_enabled && network_enabled == true) {
+            masterLogic();
+        }
+        else if (gps_enabled == true){
+            putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, currentDateTime);
         }
         else {
-            Toast.makeText(Fused.this,"check your gps and internet",Toast.LENGTH_LONG).show();
-            Log.e("anu", "check your gps and internet");
+            Toast.makeText(Fused.this,"check gps and wifi",Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void masterLogic() {
+
+        Observable.interval(20, 20, TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Long>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@NonNull Long aLong) {
+                        //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
+                        //Log.e("anu", "This happnes every mint :)");
+
+                        //  putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
+
+                        putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, currentDateTime);
+
+                        sendAllLocationToServer();
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 
     private void sendAllLocationToServer() {
