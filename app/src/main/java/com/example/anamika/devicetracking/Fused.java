@@ -53,6 +53,10 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     private int currentAcc;
     private SharedPreferences pref;
     private String driverId;
+    Cursor cursor;
+
+    String dbLAt, dblng, dbAcc, dbDir, dbImei, dbTimeStamp;
+
    // private String currentDateTime;
     private GoogleApiClient mGoogleApiClient;
     // A request to connect to Location Services
@@ -147,7 +151,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         List<MLocation> mLocationsList = new ArrayList<MLocation>();
         // Select All Query
         String selectQuery = "SELECT  * FROM " + LocationDBHelper.LocationEntry.TABLE_NAME;
-        Cursor cursor = db.rawQuery(selectQuery, null);
+      cursor = db.rawQuery(selectQuery, null);
 
         // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
@@ -261,16 +265,62 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 });
     }
 
+   /* private void dbFetch(){
+
+        try {
+            SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
+            cursor = null;
+            String selectQuery = "SELECT  * FROM " + LocationDBHelper.LocationEntry.TABLE_NAME;
+            cursor = db.rawQuery(selectQuery, null);
+            if (null!=cursor) {
+                while (cursor.moveToNext()) {
+                    //Here you can directly set the value in textview
+                    dbLAt = (cursor.getString(cursor.getColumnIndex("latitude")));
+                    dblng = (cursor.getString(cursor.getColumnIndex("longitude")));
+                    dbAcc = (cursor.getString(cursor.getColumnIndex("accuracy")));
+                    dbDir = (cursor.getString(cursor.getColumnIndex("direction")));
+                    dbImei = (cursor.getString(cursor.getColumnIndex("imei")));
+                    dbTimeStamp = (cursor.getString(cursor.getColumnIndex("timestamp")));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            cursor.close();
+        }
+    }
+*/
     private void sendAllLocationToServer() {
 //		http://111.118.178.163/amrs_igl_api/webservice.asmx/tracking?imei=32432423&lat=23.2343196868896&lon=76.2342300415039&accuracy=98.34&dir=we
 
         List<MLocation> locations = getAllLocation();
         if (locations != null && locations.size() >= 1) {
             for (int i = 0; i < locations.size(); i++) {
+                try {
+                    SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
+                    cursor = null;
+                    String selectQuery = "SELECT  * FROM " + LocationDBHelper.LocationEntry.TABLE_NAME;
+                    cursor = db.rawQuery(selectQuery, null);
+                    if (null!=cursor) {
+                        while (cursor.moveToNext()) {
+                            //Here you can directly set the value in textview
+                            dbLAt = (cursor.getString(cursor.getColumnIndex("latitude")));
+                            dblng = (cursor.getString(cursor.getColumnIndex("longitude")));
+                            dbAcc = (cursor.getString(cursor.getColumnIndex("accuracy")));
+                            dbDir = (cursor.getString(cursor.getColumnIndex("direction")));
+                            dbImei = (cursor.getString(cursor.getColumnIndex("imei")));
+                            dbTimeStamp = (cursor.getString(cursor.getColumnIndex("timestamp")));
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }finally {
+                    cursor.close();
+                }
 
                 final MLocation mLocation = locations.get(i);
-                Call<List<MLocation>> call = apiService.sendLocation(deviceNum+"", currentLng+"",
-                        currentLat+"",currentAcc+"","se", Util.getDateTime());
+                Call<List<MLocation>> call = apiService.sendLocation(dbImei+"", dblng+"",
+                        dbLAt+"",dbAcc+"",dbDir, dbTimeStamp);
                 call.enqueue(new Callback<List<MLocation>>() {
                     @Override
                     public void onResponse(Call<List<MLocation>> call, Response<List<MLocation>> response) {
