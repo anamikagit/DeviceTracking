@@ -18,6 +18,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -62,7 +64,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
     LocationManager lm;
     boolean gps_enabled = false;
-    boolean network_enabled = false;
+    boolean network_status;
 
 
 //    public String currentDateTime = Util.getDateTime();
@@ -201,6 +203,13 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
         return START_STICKY;
     }
+    /*private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        activeNetworkInfo.isAvailable();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }*/
 
     @Override
     public void onCreate() {
@@ -211,22 +220,26 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 .addApi(LocationServices.API).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this).build();
 
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        network_status = activeNetworkInfo.isAvailable();
+
+        masterLogicDB();
+
         lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        //network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if (gps_enabled && network_enabled == true) {
-            masterLogic();
-        }
-        else if (gps_enabled == true){
-            putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
+        if (network_status == true) {
+            masterLogicNetworkCall();
         }
         else {
             Toast.makeText(Fused.this,"check gps and wifi",Toast.LENGTH_LONG).show();
         }
     }
 
-    public void masterLogic() {
+    public void masterLogicDB() {
 
         Observable.interval(20, 20, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
@@ -246,6 +259,41 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                         putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
 
+                        //sendAllLocationToServer();
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    public void masterLogicNetworkCall() {
+
+        Observable.interval(20, 20, TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Long>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@NonNull Long aLong) {
+                        //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
+                        //Log.e("anu", "This happnes every mint :)");
+
+                        //  putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
+
+                        //putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
+
                         sendAllLocationToServer();
                     }
 
@@ -260,6 +308,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                     }
                 });
     }
+
 
     private void sendAllLocationToServer() {
 //		http://111.118.178.163/amrs_igl_api/webservice.asmx/tracking?imei=32432423&lat=23.2343196868896&lon=76.2342300415039&accuracy=98.34&dir=we
