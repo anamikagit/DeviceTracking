@@ -18,6 +18,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -63,6 +65,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     LocationManager lm;
     boolean gps_enabled = false;
     boolean network_enabled = false;
+    ConnectivityManager cm;
 
 
 //    public String currentDateTime = Util.getDateTime();
@@ -202,6 +205,33 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         return START_STICKY;
     }
 
+
+    public boolean networkStatus() {
+
+        cm = (ConnectivityManager) Fused.this
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (cm != null) {
+            NetworkInfo[] info = cm.getAllNetworkInfo();
+            if (info != null) for (int i = 0; i < info.length; i++)
+                if (info[i].getState() == NetworkInfo.State.CONNECTED) {
+                    Log.e("My Network is: ", "Connected ");
+                    network_enabled = true;
+                } else {
+                }
+        } else {
+            Log.e("My Network is: ", "Not Connected");
+
+            Toast.makeText(Fused.this,
+                    "Please Check Your internet connection",
+                    Toast.LENGTH_LONG).show();
+            network_enabled = false;
+
+        }
+        return network_enabled;
+    }
+
+
     @Override
     public void onCreate() {
         Log.e(TAG, "onCreate");
@@ -213,20 +243,18 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
         lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        //network_enabled = lm.isProviderEnabled(NETWORK_STATS_SERVICE.NETWORK_PROVIDER);
 
-        if (gps_enabled && network_enabled == true) {
-            masterLogic();
-        }
-        else if (gps_enabled == true){
-            putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
-        }
-        else {
-            Toast.makeText(Fused.this,"check gps and wifi",Toast.LENGTH_LONG).show();
-        }
-    }
+            masterLogicDB();
 
-    public void masterLogic() {
+            if (networkStatus() == true) {
+                masterLogicNetworkCall();
+            } else {
+                Toast.makeText(Fused.this, "check gps and wifi", Toast.LENGTH_LONG).show();
+            }
+        }
+
+    public void masterLogicDB() {
 
         Observable.interval(20, 20, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
@@ -246,7 +274,41 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                         putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
 
-                        sendAllLocationToServer();
+                      //  sendAllLocationToServer();
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+    public void masterLogicNetworkCall() {
+
+        Observable.interval(20, 20, TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Long>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@NonNull Long aLong) {
+                        //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
+                        //Log.e("anu", "This happnes every mint :)");
+
+                        //  putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
+
+                        //putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
+
+                         sendAllLocationToServer();
                     }
 
                     @Override
