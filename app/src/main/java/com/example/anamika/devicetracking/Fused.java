@@ -65,7 +65,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     LocationManager lm;
     boolean gps_enabled = false;
     boolean network_status;
-
+    boolean boolStatus;
 
 //    public String currentDateTime = Util.getDateTime();
 
@@ -203,13 +203,14 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
         return START_STICKY;
     }
-    /*private boolean isNetworkAvailable() {
+    private void isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        activeNetworkInfo.isAvailable();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
-    }*/
+        //return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        boolStatus = activeNetworkInfo != null && activeNetworkInfo.isConnected();
+
+    }
 
     @Override
     public void onCreate() {
@@ -220,27 +221,18 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 .addApi(LocationServices.API).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this).build();
 
-
-        /*private boolean isNetworkAvailable() {
-            ConnectivityManager connectivityManager
-                    = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
-        }*/
-
-
-        ConnectivityManager connectivityManager
+       /* ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        network_status = activeNetworkInfo.isAvailable();
-
+        network_status = activeNetworkInfo.isAvailable();*/
+        isNetworkAvailable();
         masterLogicDB();
 
         lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         //network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if (network_status == true) {
+        if (boolStatus) {
             masterLogicNetworkCall();
         }
         else {
