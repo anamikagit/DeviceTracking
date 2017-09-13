@@ -1,5 +1,6 @@
 package com.example.anamika.devicetracking;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -18,6 +19,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -215,11 +218,6 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 .addApi(LocationServices.API).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this).build();
 
-        lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-
         Observable.interval(20, 20, TimeUnit.SECONDS)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -231,25 +229,12 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                 @Override
                 public void onNext(@NonNull Long aLong) {
-                    //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
-                    //Log.e("anu", "This happnes every mint :)");
+                    putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
 
-                    //  putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
-
-//                    putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
-
-
-                    if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    if (isMobileDataEnabled() || isWifiEnabled()) {
                         sendAllLocationToServer();
                     }
-                    if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
-                        putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
-                    }
-                    else {
-                        Toast.makeText(Fused.this,"check gps and wifi",Toast.LENGTH_LONG).show();
-                    }
 
-//                    sendAllLocationToServer();
                 }
 
                 @Override
@@ -262,37 +247,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
                 }
             });
-
-
     }
 
-
-
-   /* private void dbFetch(){
-
-        try {
-            SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
-            cursor = null;
-            String selectQuery = "SELECT  * FROM " + LocationDBHelper.LocationEntry.TABLE_NAME;
-            cursor = db.rawQuery(selectQuery, null);
-            if (null!=cursor) {
-                while (cursor.moveToNext()) {
-                    //Here you can directly set the value in textview
-                    dbLAt = (cursor.getString(cursor.getColumnIndex("latitude")));
-                    dblng = (cursor.getString(cursor.getColumnIndex("longitude")));
-                    dbAcc = (cursor.getString(cursor.getColumnIndex("accuracy")));
-                    dbDir = (cursor.getString(cursor.getColumnIndex("direction")));
-                    dbImei = (cursor.getString(cursor.getColumnIndex("imei")));
-                    dbTimeStamp = (cursor.getString(cursor.getColumnIndex("timestamp")));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }finally {
-            cursor.close();
-        }
-    }
-*/
     private void sendAllLocationToServer() {
 //		http://111.118.178.163/amrs_igl_api/webservice.asmx/tracking?imei=32432423&lat=23.2343196868896&lon=76.2342300415039&accuracy=98.34&dir=we
         Log.e("zia", "sendAllLocationToServer() is called");
@@ -300,10 +256,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         if (locations != null && locations.size() >= 1) {
             for (int i = 0; i < locations.size(); i++) {
                 final MLocation mLocation = locations.get(i);
-/*
-                Call<List<MLocation>> call = apiService.sendLocation(dbImei+"", dblng+"",
-                        dbLAt+"",dbAcc+"",dbDir, dbTimeStamp);
-*/
+
                 Call<List<MLocation>> call = apiService
                     .sendLocation(String.valueOf(mLocation.getImei()), mLocation.getLat(), mLocation.getLon(),
                         mLocation.getAccuracy(), mLocation.getDir(), mLocation.getTimestamp());
@@ -378,5 +331,25 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     @Override
     public void onConnectionSuspended(int arg0) {
         // TODO Auto-generated method stub
+    }
+
+    public Boolean isMobileDataEnabled(){
+        Object connectivityService = getSystemService(CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) connectivityService;
+
+        try {
+            Class<?> c = Class.forName(cm.getClass().getName());
+            Method m = c.getDeclaredMethod("getMobileDataEnabled");
+            m.setAccessible(true);
+            return (Boolean)m.invoke(cm);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private Boolean isWifiEnabled(){
+        WifiManager wifi = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        return wifi.isWifiEnabled();
     }
 }
