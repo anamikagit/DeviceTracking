@@ -53,18 +53,23 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     private int currentAcc;
     private SharedPreferences pref;
     private String driverId;
-    private String currentDateTime;
+    Cursor cursor;
+
+    String dbLAt, dblng, dbAcc, dbDir, dbImei, dbTimeStamp;
+
+   // private String currentDateTime;
     private GoogleApiClient mGoogleApiClient;
     // A request to connect to Location Services
     private LocationRequest mLocationRequest;
 
     private LocationListener locationListener;
 
-
-    Timer timer;
     LocationManager lm;
     boolean gps_enabled = false;
     boolean network_enabled = false;
+
+
+//    public String currentDateTime = Util.getDateTime();
 
     RestInterface apiService = RestClient.getClient().create(RestInterface.class);
     private class LocationListener implements
@@ -91,6 +96,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             currentLat = location.getLatitude();
             currentLng = location.getLongitude();
             currentAcc = (int) location.getAccuracy();
+            //String currentDateTime = Util.getCurrentDate();
+
             //currentDir = location.getBearingAccuracyDegrees();
             //currentSpeed = location.getSpeed();
             // currentDateTime = com.example.aarya.fieldofficersurveilance.model.Util.getDateTime();
@@ -98,7 +105,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             mContext.registerReceiver(mBroadcastReceiver, iFilter);
             // getCompleteAddressString(double LATITUDE, double LONGITUDE);
-            String deviceNum;
+           // String deviceNum;
             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             if (ActivityCompat.checkSelfPermission(Fused.this, Manifest.permission.READ_PHONE_STATE)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -114,14 +121,15 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             }
             deviceNum = telephonyManager.getDeviceId();
             Toast.makeText(Fused.this,"loc:" +currentLat + "/ " + currentLng +
-                    " /" + currentAcc + "/ " +deviceNum + "/" + Util.getCurrentDate(),Toast.LENGTH_LONG).show();
+                    " /" + currentAcc + "/ " +deviceNum + "/" + Util.getDateTime(),Toast.LENGTH_LONG).show();
 
            // putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
 
         }
     }
 
-    private void putInfoToDb(String currentDir, double currentLat, double currentLng, float currentAcc, String deviceNum) {
+    private void putInfoToDb(String currentDir, double currentLat, double currentLng, float currentAcc,
+                             String deviceNum, String currentDateTime) {
         SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -130,6 +138,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_ACCURACY, currentAcc);
         values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_DIRECTION, currentDir);
         values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_IMEI, deviceNum);
+        values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_TIMESTAMP, Util.getDateTime());
+//        values.put(LocationDBHelper.LocationEntry.COLUMN_NAME_TIMESTAMP, currentDateTime);
 
         long newRowId = db.insert(LocationDBHelper.LocationEntry.TABLE_NAME, null, values);
         db.close();
@@ -141,7 +151,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         List<MLocation> mLocationsList = new ArrayList<MLocation>();
         // Select All Query
         String selectQuery = "SELECT  * FROM " + LocationDBHelper.LocationEntry.TABLE_NAME;
-        Cursor cursor = db.rawQuery(selectQuery, null);
+      cursor = db.rawQuery(selectQuery, null);
 
         // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
@@ -153,7 +163,8 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
                 mLocation.setAccuracy(cursor.getString(3));
                 mLocation.setDir(cursor.getString(4));
                 mLocation.setImei(cursor.getInt(5));
-                // Adding contact to list
+                mLocation.setTimestamp(cursor.getString(6));
+                // Adding data to list
                 mLocationsList.add(mLocation);
             } while (cursor.moveToNext());
         }
@@ -208,53 +219,95 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if (gps_enabled || network_enabled) {
-            Context context = getApplicationContext();
 
-            Observable.interval(20, 20, TimeUnit.SECONDS)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<Long>() {
-                        @Override
-                        public void onSubscribe(@NonNull Disposable d) {
+        Observable.interval(20, 20, TimeUnit.SECONDS)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Observer<Long>() {
+                @Override
+                public void onSubscribe(@NonNull Disposable d) {
 
-                        }
+                }
 
-                        @Override
-                        public void onNext(@NonNull Long aLong) {
-                            //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
-                            //Log.e("anu", "This happnes every mint :)");
-                            putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
-                            sendAllLocationToServer();
-                        }
+                @Override
+                public void onNext(@NonNull Long aLong) {
+                    //Toast.makeText(Fused.this, "This happnes every mint :)", Toast.LENGTH_SHORT).show();
+                    //Log.e("anu", "This happnes every mint :)");
 
-                        @Override
-                        public void onError(@NonNull Throwable e) {
+                    //  putInfoToDb(currentDir, currentLat, currentLng, currentAcc , deviceNum);
 
-                        }
+//                    putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
 
-                        @Override
-                        public void onComplete() {
 
-                        }
-                    });
-        }
-        else {
-            Toast.makeText(Fused.this,"check your gps and internet",Toast.LENGTH_LONG).show();
-            Log.e("anu", "check your gps and internet");
-        }
+                    if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                        sendAllLocationToServer();
+                    }
+                    if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+                        putInfoToDb(currentDir, currentLat, currentLng, currentAcc, deviceNum, Util.getDateTime());
+                    }
+                    else {
+                        Toast.makeText(Fused.this,"check gps and wifi",Toast.LENGTH_LONG).show();
+                    }
+
+//                    sendAllLocationToServer();
+                }
+
+                @Override
+                public void onError(@NonNull Throwable e) {
+
+                }
+
+                @Override
+                public void onComplete() {
+
+                }
+            });
+
+
     }
 
+
+
+   /* private void dbFetch(){
+
+        try {
+            SQLiteDatabase db = LocationDBHelper.getInstance(Fused.this).getWritableDatabase();
+            cursor = null;
+            String selectQuery = "SELECT  * FROM " + LocationDBHelper.LocationEntry.TABLE_NAME;
+            cursor = db.rawQuery(selectQuery, null);
+            if (null!=cursor) {
+                while (cursor.moveToNext()) {
+                    //Here you can directly set the value in textview
+                    dbLAt = (cursor.getString(cursor.getColumnIndex("latitude")));
+                    dblng = (cursor.getString(cursor.getColumnIndex("longitude")));
+                    dbAcc = (cursor.getString(cursor.getColumnIndex("accuracy")));
+                    dbDir = (cursor.getString(cursor.getColumnIndex("direction")));
+                    dbImei = (cursor.getString(cursor.getColumnIndex("imei")));
+                    dbTimeStamp = (cursor.getString(cursor.getColumnIndex("timestamp")));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            cursor.close();
+        }
+    }
+*/
     private void sendAllLocationToServer() {
 //		http://111.118.178.163/amrs_igl_api/webservice.asmx/tracking?imei=32432423&lat=23.2343196868896&lon=76.2342300415039&accuracy=98.34&dir=we
-
+        Log.e("zia", "sendAllLocationToServer() is called");
         List<MLocation> locations = getAllLocation();
         if (locations != null && locations.size() >= 1) {
             for (int i = 0; i < locations.size(); i++) {
-
                 final MLocation mLocation = locations.get(i);
-                Call<List<MLocation>> call = apiService.sendLocation("488787875456", currentLng+"",
-                        currentLat+"",currentAcc+"","se", Util.getDateTime());
+/*
+                Call<List<MLocation>> call = apiService.sendLocation(dbImei+"", dblng+"",
+                        dbLAt+"",dbAcc+"",dbDir, dbTimeStamp);
+*/
+                Call<List<MLocation>> call = apiService
+                    .sendLocation(String.valueOf(mLocation.getImei()), mLocation.getLat(), mLocation.getLon(),
+                        mLocation.getAccuracy(), mLocation.getDir(), mLocation.getTimestamp());
+
                 call.enqueue(new Callback<List<MLocation>>() {
                     @Override
                     public void onResponse(Call<List<MLocation>> call, Response<List<MLocation>> response) {
