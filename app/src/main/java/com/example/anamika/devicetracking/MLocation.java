@@ -2,17 +2,8 @@ package com.example.anamika.devicetracking;
 
 public class MLocation {
 
-    private int imei;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
     private int id;
+    private int imei;
     private String lat;
     private String lon;
     private String accuracy;
@@ -38,6 +29,14 @@ public class MLocation {
     }
 
     public MLocation() {
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getImei() {
