@@ -45,7 +45,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class Fused extends Service implements GoogleApiClient.ConnectionCallbacks,
+public class Fused extends Service implements
+        GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = "DRIVER";
     private LocationManager mLocationManager = null;
@@ -251,7 +252,7 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
 
     private void sendAllLocationToServer() {
 //		http://111.118.178.163/amrs_igl_api/webservice.asmx/tracking?imei=32432423&lat=23.2343196868896&lon=76.2342300415039&accuracy=98.34&dir=we
-        Log.e("zia", "sendAllLocationToServer() is called");
+        Log.e("anu", "sendAllLocationToServer() is called");
         List<MLocation> locations = getAllLocation();
         if (locations != null && locations.size() >= 1) {
             for (int i = 0; i < locations.size(); i++) {
@@ -281,8 +282,6 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
             }
         }
     }
-
-
 
     @Override
     public void onDestroy() {
@@ -332,24 +331,5 @@ public class Fused extends Service implements GoogleApiClient.ConnectionCallback
     public void onConnectionSuspended(int arg0) {
         // TODO Auto-generated method stub
     }
-
-    public Boolean isMobileDataEnabled(){
-        Object connectivityService = getSystemService(CONNECTIVITY_SERVICE);
-        ConnectivityManager cm = (ConnectivityManager) connectivityService;
-
-        try {
-            Class<?> c = Class.forName(cm.getClass().getName());
-            Method m = c.getDeclaredMethod("getMobileDataEnabled");
-            m.setAccessible(true);
-            return (Boolean)m.invoke(cm);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    private Boolean isWifiEnabled(){
-        WifiManager wifi = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        return wifi.isWifiEnabled();
-    }
+    
 }
